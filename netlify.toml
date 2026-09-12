@@ -1,0 +1,9 @@
+# ORUNEVA — static site. Nothing to build: the folder is the site.
+[build]
+  publish = "."
+
+[build.processing]
+  skip_processing = false
+
+[build.processing.html]
+  pretty_urls = true

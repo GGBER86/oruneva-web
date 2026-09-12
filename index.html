@@ -451,7 +451,7 @@ details.more>summary::after{content:"+";font-size:1.2rem;line-height:1;color:var
 details.more[open]>summary::after{content:"–"}
 details.more .form{padding-bottom:24px}
 .note{font-size:.83rem;color:var(--muted);max-width:58ch}
-.receipt{border:1px solid var(--rule);padding:22px;display:none}
+.receipt{border:1px solid var(--rule);padding:22px;display:none;scroll-margin-top:96px}
 .receipt.on{display:block}
 .receipt pre{
   font-family:var(--mono);font-size:.76rem;line-height:1.7;white-space:pre-wrap;word-break:break-word;
@@ -1190,11 +1190,11 @@ details.more .form{padding-bottom:24px}
       </form>
 
       <div class="receipt" id="receipt" role="status" aria-live="polite">
-        <span class="label label--signal">Ready to send</span>
+        <span class="label label--signal" id="receipt-eyebrow">Sent</span>
         <h3 class="h3" style="margin-top:12px">Thank you. We will review the location and contact you if we see a potential fit.</h3>
         <p class="muted" style="margin-top:12px;font-size:.92rem" id="receipt-how">Your submission is below for your records. If your mail application opened, the same summary is in the draft; otherwise copy the text and send it to <a href="mailto:info@oruneva.com" style="color:var(--yellow)">info@oruneva.com</a>.</p>
         <pre id="receipt-body"></pre>
-        <div class="btns" style="margin-top:18px">
+        <div class="btns" style="margin-top:18px" id="mail-again-wrap" hidden>
           <a class="btn btn--ghost" id="mail-again" href="#">Open mail again</a>
         </div>
       </div>
@@ -1535,11 +1535,23 @@ details.more .form{padding-bottom:24px}
     return "mailto:info@oruneva.com?subject=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(text);
   }
 
+  var eyebrow = document.getElementById("receipt-eyebrow");
+  var howEl = document.getElementById("receipt-how");
+  var mailWrap = document.getElementById("mail-again-wrap");
+
   function showReceipt(text, url, sent){
     body.textContent = text;
     mailAgain.setAttribute("href", url);
+    if(sent){
+      eyebrow.textContent = "Sent";
+      howEl.innerHTML = 'It reached us. A copy is below for your records — you can also write to <a href="mailto:info@oruneva.com" style="color:var(--yellow)">info@oruneva.com</a> at any time.';
+      mailWrap.hidden = true;
+    } else {
+      eyebrow.textContent = "Not sent yet — one step left";
+      howEl.innerHTML = 'We could not deliver this from the page, so your mail application should have opened with the summary below. If it did not, copy the text and send it to <a href="mailto:info@oruneva.com" style="color:var(--yellow)">info@oruneva.com</a>.';
+      mailWrap.hidden = false;
+    }
     receipt.classList.add("on");
-    receipt.setAttribute("data-sent", sent ? "1" : "0");
     form.style.display = "none";
     window.oruneva_events.push({event:"form_complete", at:new Date().toISOString(), delivered:!!sent});
     receipt.scrollIntoView({block:"start"});
@@ -1587,14 +1599,6 @@ details.more .form{padding-bottom:24px}
       done = true; fallback();
     });
   });
-
-  /* tell the sender the truth about what just happened */
-  var howEl = document.getElementById("receipt-how");
-  new MutationObserver(function(){
-    if(receipt.getAttribute("data-sent") === "1" && howEl){
-      howEl.innerHTML = 'Received. A copy of what you sent is below for your records — you can also reach us at <a href="mailto:info@oruneva.com" style="color:var(--yellow)">info@oruneva.com</a>.';
-    }
-  }).observe(receipt, {attributes:true, attributeFilter:["data-sent"]});
 
   render(false);
 })();
